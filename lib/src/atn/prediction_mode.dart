@@ -128,7 +128,7 @@ class PredictionMode {
       if (configs.hasSemanticContext) {
         // dup configs, tossing out semantic predicates
         AtnConfigSet dup = new AtnConfigSet();
-        for (AtnConfig c in configs) {
+        for (AtnConfig c in configs.elements) {
           dup.add(new AtnConfig.from(c, semanticContext:SemanticContext.NONE));
         }
         configs = dup;
@@ -150,7 +150,7 @@ class PredictionMode {
   /// Return `true` if any configuration in `configs` is in a [RuleStopState].
   /// Otherwise `false`.
   static bool hasConfigInRuleStopState(AtnConfigSet configs) {
-    for (AtnConfig c in configs) {
+    for (AtnConfig c in configs.elements) {
       if (c.state is RuleStopState) return true;
     }
     return false;
@@ -165,7 +165,7 @@ class PredictionMode {
   /// Return `true` if all configurations in `configs` are in a [RuleStopState].
   /// Otherwise `false`.
   static bool allConfigsInRuleStopStates(AtnConfigSet configs) {
-    for (AtnConfig config in configs) {
+    for (AtnConfig config in configs.elements) {
       if (config.state is! RuleStopState) return false;
     }
     return true;
@@ -314,7 +314,7 @@ class PredictionMode {
   /// `[BitSet.cardinality] == 1`. Otherwise `false`.
   static bool hasNonConflictingAltSet(Iterable<BitSet> altsets) {
     for (BitSet alts in altsets) {
-      if (alts.cardinality == 1) return true;
+      if (alts.countBits(true) == 1) return true;
     }
     return false;
   }
@@ -328,7 +328,7 @@ class PredictionMode {
   /// `[BitSet.cardinality] > 1`, otherwise `false`.
   static bool hasConflictingAltSet(Iterable<BitSet> altsets) {
     for (BitSet alts in altsets) {
-      if (alts.cardinality > 1) return true;
+      if (alts.countBits(true) > 1) return true;
     }
     return false;
   }
@@ -356,7 +356,7 @@ class PredictionMode {
   /// [altsets] is a collection of alternative subsets.
   static int getUniqueAlt(Iterable<BitSet> altsets) {
     BitSet all = getAlts(altsets);
-    if (all.cardinality == 1) return all.nextSetBit(0);
+    if (all.countBits(true) == 1) return all.findNext(0, true);
     return Atn.INVALID_ALT_NUMBER;
   }
 
@@ -368,7 +368,7 @@ class PredictionMode {
   ///
   /// Return the set of represented alternatives in [altsets].
   static BitSet getAlts(Iterable<BitSet> altsets) {
-    BitSet all = new BitSet();
+    BitSet all = new BitSet(0);
     altsets.forEach((alts) => all.or(alts));
     return all;
   }
@@ -379,13 +379,13 @@ class PredictionMode {
   ///     map[c] U= c.alt // map hash/equals uses s and x, not alt and not pred
   static Iterable<BitSet> getConflictingAltSubsets(AtnConfigSet configs) {
     var configToAlts = new HashMap(equals:_equals, hashCode:_hashCode);
-    for (AtnConfig c in configs) {
+    for (AtnConfig c in configs.elements) {
       BitSet alts = configToAlts[c];
       if (alts == null) {
-        alts = new BitSet();
+        alts = new BitSet(0);
         configToAlts[c] = alts;
       }
-      alts.set(c.alt, true);
+      alts[c.alt]= true;
     }
     return configToAlts.values;
   }
@@ -396,13 +396,13 @@ class PredictionMode {
   ///     map[c.state] U= c.alt alt
   static Map<AtnState, BitSet> getStateToAltMap(AtnConfigSet configs) {
     Map<AtnState, BitSet> m = new HashMap<AtnState, BitSet>();
-    for (AtnConfig c in configs) {
+    for (AtnConfig c in configs.elements) {
       BitSet alts = m[c.state];
       if (alts == null) {
-        alts = new BitSet();
+        alts = new BitSet(0);
         m[c.state] = alts;
       }
-      alts.set(c.alt, true);
+      alts[c.alt] =  true;
     }
     return m;
   }
@@ -410,21 +410,21 @@ class PredictionMode {
   static bool hasStateAssociatedWithOneAlt(AtnConfigSet configs) {
     Map<AtnState, BitSet> x = getStateToAltMap(configs);
     for (BitSet alts in x.values) {
-      if (alts.cardinality == 1) return true;
+      if (alts.countBits(true) == 1) return true;
     }
     return false;
   }
 
   static int getSingleViableAlt(Iterable<BitSet> altsets) {
-    BitSet viableAlts = new BitSet();
+    BitSet viableAlts = new BitSet(0);
     for (BitSet alts in altsets) {
-      int minAlt = alts.nextSetBit(0);
-      viableAlts.set(minAlt, true);
-      if (viableAlts.cardinality > 1) { // more than 1 viable alt
+      int minAlt = alts.findNext(0, true);
+      viableAlts[minAlt] = true;
+      if (viableAlts.countBits(true) > 1) { // more than 1 viable alt
         return Atn.INVALID_ALT_NUMBER;
       }
     }
-    return viableAlts.nextSetBit(0);
+    return viableAlts.findNext(0, true);
   }
 
   String toString() => name;

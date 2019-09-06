@@ -3,6 +3,11 @@ version: 0.7.0
 author: Tiago Mazzutti <tiagomzt@gmail.com>
 description: ANTLR4 runtime library for Dart.
 homepage: https://github.com/tiagomazzutti/antlr4dart-runtime.git
+
+environment:
+  sdk: ">=2.2.2 <3.0.0"
+
 dependencies:
-  bignum: any
+  bit_set: 
+    git: https://github.com/skalkin/bit_set.git 
   collection: any

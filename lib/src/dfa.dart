@@ -189,7 +189,7 @@ class DfaState {
   Set<int> get altSet {
     Set<int> alts = new HashSet<int>();
     if (configs != null) {
-      for (AtnConfig c in configs) alts.add(c.alt);
+      for (AtnConfig c in configs.elements) alts.add(c.alt);
     }
     return (alts.isEmpty) ? null : alts;
   }

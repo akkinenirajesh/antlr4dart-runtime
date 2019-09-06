@@ -104,6 +104,8 @@ abstract class Token {
   /// it doesn't have a valid index.
   int get tokenIndex;
 
+  void set tokenIndex(int val);
+
   /// The starting character index of the token
   /// This method is optional; return -1 if not implemented.
   int get startIndex;

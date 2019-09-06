@@ -28,7 +28,7 @@ class Ll1Analyzer {
       Set<AtnConfig> lookBusy = new HashSet<AtnConfig>();
       bool seeThruPreds = false; // fail to get lookahead upon pred
       _look(state.getTransition(alt).target, null, PredictionContext.EMPTY,
-          look[alt], lookBusy, new BitSet(), seeThruPreds, false);
+          look[alt], lookBusy, new BitSet(0), seeThruPreds, false);
       // Wipe out lookahead for this alternative if we found nothing
       // or we had a predicate when we !seeThruPreds
       if (look[alt].length == 0 || look[alt].contains(HIT_PRED)) {
@@ -60,7 +60,7 @@ class Ll1Analyzer {
     var lookContext = context != null
         ? new PredictionContext.fromRuleContext(state.atn, context) : null;
     _look(state, stopState, lookContext, r,
-        new HashSet<AtnConfig>(), new BitSet(), seeThruPreds, true);
+        new HashSet<AtnConfig>(), new BitSet(0), seeThruPreds, true);
     return r;
   }
 
@@ -83,7 +83,7 @@ class Ll1Analyzer {
   /// from causing a stack overflow. Outside code should pass
   /// `new HashSet<AtnConfig>()` for this argument.
   /// [calledRuleStack] is A set used for preventing left recursion in the
-  /// ATN from causing a stack overflow. Outside code should pass `new BitSet()`
+  /// ATN from causing a stack overflow. Outside code should pass `new BitSet(0)`
   /// for this argument.
   /// [seeThruPreds] is `true` to true semantic predicates as implicitly `true`
   /// and "see through them", otherwise `false` to treat semantic predicates as
@@ -121,14 +121,14 @@ class Ll1Analyzer {
           // run thru all possible stack tops in ctx
           for (int i = 0; i < context.length; i++) {
             AtnState returnState = atn.states[context.returnStateFor(i)];
-            bool removed = calledRuleStack.get(returnState.ruleIndex);
+            bool removed = calledRuleStack[returnState.ruleIndex];
             try {
-              calledRuleStack.set(returnState.ruleIndex);
+              calledRuleStack[returnState.ruleIndex];
               _look(returnState, stopState, context.parentFor(i),
                   look, lookBusy, calledRuleStack, seeThruPreds, addEof);
             } finally {
               if (removed) {
-                calledRuleStack.set(returnState.ruleIndex, true);
+                calledRuleStack[returnState.ruleIndex]= true;
               }
             }
           }
@@ -139,17 +139,17 @@ class Ll1Analyzer {
       for (int i = 0; i < n; i++) {
       Transition transition = state.getTransition(i);
       if (transition.runtimeType == RuleTransition) {
-        if (calledRuleStack.get(transition.target.ruleIndex)) continue;
+        if (calledRuleStack[transition.target.ruleIndex]) continue;
         PredictionContext newContext =
           new SingletonPredictionContext.empty(
               context, (transition as RuleTransition).followState.stateNumber);
         try {
-          calledRuleStack.set(
-              (transition as RuleTransition).target.ruleIndex, true);
+          calledRuleStack[
+              (transition as RuleTransition).target.ruleIndex] =  true;
           _look(transition.target, stopState, newContext,
               look, lookBusy, calledRuleStack, seeThruPreds, addEof);
         } finally {
-          calledRuleStack.clear((transition as RuleTransition).target.ruleIndex);
+          calledRuleStack[((transition as RuleTransition).target.ruleIndex)] = false;
         }
       } else if (transition is AbstractPredicateTransition) {
         if (seeThruPreds) {

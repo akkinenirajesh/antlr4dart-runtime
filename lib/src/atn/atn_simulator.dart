@@ -285,7 +285,7 @@ class ParserAtnSimulator extends AtnSimulator {
   // "dead" code for a bit.
   void _dumpDeadEndConfigs(NoViableAltException nvae) {
     print("dead end configs: ");
-    for (AtnConfig c in nvae.deadEndConfigs) {
+    for (AtnConfig c in nvae.deadEndConfigs.elements) {
       String trans = "no edges";
       if (c.state.numberOfTransitions > 0) {
         Transition t = c.state.getTransition(0);
@@ -330,7 +330,7 @@ class ParserAtnSimulator extends AtnSimulator {
   AtnConfigSet _applyPrecedenceFilter(AtnConfigSet configs) {
     Set<int> statesFromAlt1 = new HashSet<int>();
     AtnConfigSet configSet = new AtnConfigSet(configs.fullCtx);
-    for (AtnConfig config in configs) {
+    for (AtnConfig config in configs.elements) {
       // handle alt 1 first
       if (config.alt != 1) continue;
       var updatedContext =
@@ -344,7 +344,7 @@ class ParserAtnSimulator extends AtnSimulator {
         configSet.add(config, _mergeCache);
       }
     }
-    for (AtnConfig config in configs) {
+    for (AtnConfig config in configs.elements) {
       if (config.alt == 1) continue;
       if (statesFromAlt1.contains(config.state.stateNumber)) {
         // eliminated
@@ -418,8 +418,8 @@ class ParserAtnSimulator extends AtnSimulator {
           if (conflictIndex != startIndex) tokenSource.seek(startIndex);
           conflictingAlts = _evalSemanticContext(
               state.predicates, outerContext, true);
-          if (conflictingAlts.cardinality == 1) {
-            return conflictingAlts.nextSetBit(0);
+          if (conflictingAlts.countBits(true) == 1) {
+            return conflictingAlts.findNext(0, true);
           }
           if (conflictIndex != startIndex) {
             // restore the index so reporting the fallback to full
@@ -443,16 +443,16 @@ class ParserAtnSimulator extends AtnSimulator {
         int stopIndex = tokenSource.index;
         tokenSource.seek(startIndex);
         BitSet alts = _evalSemanticContext(state.predicates, outerContext, true);
-        switch (alts.cardinality) {
+        switch (alts.countBits(true)) {
           case 0: throw _noViableAlt(
                 tokenSource, outerContext, state.configs, startIndex);
-          case 1: return alts.nextSetBit(0);
+          case 1: return alts.findNext(0, true);
           default:
             // report ambiguity after predicate evaluation to make sure the
             // correct set of ambig alts is reported.
             _reportAmbiguity(
                 dfa, state, startIndex, stopIndex, false, alts, state.configs);
-            return alts.nextSetBit(0);
+            return alts.findNext(0, true);
         }
       }
       previousD = state;
@@ -513,7 +513,7 @@ class ParserAtnSimulator extends AtnSimulator {
           // in SLL-only mode, we will stop at this state and return the
           // minimum alt
           ..isAcceptState = true
-          ..prediction = state.configs._conflictingAlts.nextSetBit(0);
+          ..prediction = state.configs._conflictingAlts.findNext(0, true);
     }
 
     if ( state.isAcceptState && state.configs.hasSemanticContext) {
@@ -544,7 +544,7 @@ class ParserAtnSimulator extends AtnSimulator {
       // There are preds in configs but they might go away
       // when OR'd together like {p}? || NONE == NONE. If neither
       // alt has preds, resolve to min alt
-      dfaState.prediction = altsToCollect.nextSetBit(0);
+      dfaState.prediction = altsToCollect.findNext(0, true);
     }
   }
 
@@ -676,7 +676,7 @@ class ParserAtnSimulator extends AtnSimulator {
                                     ParserRuleContext outerContext) {
     AtnConfigSet succeeded = new AtnConfigSet(configs.fullCtx);
     AtnConfigSet failed = new AtnConfigSet(configs.fullCtx);;
-    for (AtnConfig c in configs) {
+    for (AtnConfig c in configs.elements) {
       if (c.semanticContext != SemanticContext.NONE ) {
         bool predicate = c.semanticContext.eval(parser, outerContext);
         if (predicate) {
@@ -707,7 +707,7 @@ class ParserAtnSimulator extends AtnSimulator {
     List<AtnConfig> skippedStopStates = null;
     // First figure out where we can reach on input t
 
-    for (AtnConfig c in closure) {
+    for (AtnConfig c in closure.elements) {
       if (c.state is RuleStopState) {
         assert(c.context.isEmpty);
         if (fullCtx || t == Token.EOF) {
@@ -758,7 +758,7 @@ class ParserAtnSimulator extends AtnSimulator {
       reach = new AtnConfigSet(fullCtx);
       Set<AtnConfig> closureBusy = new HashSet<AtnConfig>();
       bool treatEofAsEpsilon = t == Token.EOF;
-      for (AtnConfig c in intermediate) {
+      for (AtnConfig c in intermediate.elements) {
         _closure(c, reach, closureBusy, false, fullCtx, treatEofAsEpsilon);
       }
     }
@@ -821,7 +821,7 @@ class ParserAtnSimulator extends AtnSimulator {
                                                    bool lookToEndOfRule) {
     if (PredictionMode.allConfigsInRuleStopStates(configs)) return configs;
     AtnConfigSet result = new AtnConfigSet(configs.fullCtx);
-    for (AtnConfig config in configs) {
+    for (AtnConfig config in configs.elements) {
       if (config.state is RuleStopState) {
         result.add(config, _mergeCache);
         continue;
@@ -872,8 +872,8 @@ class ParserAtnSimulator extends AtnSimulator {
     //
     // From this, it is clear that NONE || anything == NONE.
     List<SemanticContext> altToPred = new List<SemanticContext>(nalts + 1);
-    for (AtnConfig c in configs) {
-      if (ambigAlts.get(c.alt)) {
+    for (AtnConfig c in configs.elements) {
+      if (ambigAlts[c.alt]) {
         altToPred[c.alt] = SemanticContext.or(
             altToPred[c.alt], c.semanticContext);
       }
@@ -899,7 +899,7 @@ class ParserAtnSimulator extends AtnSimulator {
       SemanticContext pred = altToPred[i];
       // unpredicated is indicated by SemanticContext.NONE
       assert(pred != null);
-      if (ambigAlts != null && ambigAlts.get(i)) {
+      if (ambigAlts != null && ambigAlts[i]) {
         pairs.add(new _PredPrediction(pred, i));
       }
       if (pred!=SemanticContext.NONE) containsPredicate = true;
@@ -910,7 +910,7 @@ class ParserAtnSimulator extends AtnSimulator {
 
   int _getAltThatFinishedDecisionEntryRule(AtnConfigSet configs) {
     IntervalSet alts = new IntervalSet();
-    for (AtnConfig c in configs) {
+    for (AtnConfig c in configs.elements) {
       if (c.reachesIntoOuterContext>0
           || (c.state is RuleStopState && c.context.hasEmptyPath)) {
         alts.addSingle(c.alt);
@@ -928,16 +928,16 @@ class ParserAtnSimulator extends AtnSimulator {
   BitSet _evalSemanticContext(List<_PredPrediction> predPredictions,
                               ParserRuleContext outerContext,
                               bool complete) {
-    BitSet predictions = new BitSet();
+    BitSet predictions = new BitSet(0);
     for (_PredPrediction pair in predPredictions) {
       if (pair.pred == SemanticContext.NONE) {
-        predictions.set(pair.alt, true);
+        predictions[pair.alt] = true;
         if (!complete) break;
         continue;
       }
       bool predicateEvaluationResult = pair.pred.eval(parser, outerContext);
       if ( predicateEvaluationResult ) {
-        predictions.set(pair.alt, true);
+        predictions[pair.alt] = true;
         if (!complete) break;
       }
     }
@@ -1200,8 +1200,8 @@ class ParserAtnSimulator extends AtnSimulator {
   BitSet _getConflictingAltsOrUniqueAlt(AtnConfigSet configs) {
     BitSet conflictingAlts;
     if (configs.uniqueAlt != Atn.INVALID_ALT_NUMBER) {
-      conflictingAlts = new BitSet();
-      conflictingAlts.set(configs.uniqueAlt, true);
+      conflictingAlts = new BitSet(0);
+      conflictingAlts[configs.uniqueAlt] = true;
     } else {
       conflictingAlts = configs._conflictingAlts;
     }
@@ -1223,7 +1223,7 @@ class ParserAtnSimulator extends AtnSimulator {
 
   static int _getUniqueAlt(AtnConfigSet configs) {
     int alt = Atn.INVALID_ALT_NUMBER;
-    for (AtnConfig c in configs) {
+    for (AtnConfig c in configs.elements) {
       if ( alt == Atn.INVALID_ALT_NUMBER ) {
         alt = c.alt; // found first alt
       } else if (c.alt != alt) {
@@ -1541,7 +1541,7 @@ class LexerAtnSimulator extends AtnSimulator {
     // this is used to skip processing for configs which have a lower priority
     // than a config that already reached an accept state for the same rule
     int skipAlt = Atn.INVALID_ALT_NUMBER;
-    for (AtnConfig c in closure) {
+    for (AtnConfig c in closure.elements) {
       bool currentAltReachedAcceptState = c.alt == skipAlt;
       if (currentAltReachedAcceptState
           && (c as LexerAtnConfig).hasPassedThroughNonGreedyDecision) {
@@ -1827,7 +1827,7 @@ class LexerAtnSimulator extends AtnSimulator {
     assert(!configs.hasSemanticContext);
     DfaState proposed = new DfaState.config(configs);
     AtnConfig firstConfigWithRuleStopState = null;
-    for (AtnConfig c in configs) {
+    for (AtnConfig c in configs.elements) {
       if (c.state is RuleStopState ) {
         firstConfigWithRuleStopState = c;
         break;

@@ -16,7 +16,7 @@ class DoubleKeyMap<Key1, Key2, Value> {
     return set;
   }
 
-  Set get keys => data.keys;
+  Set get keys => data.keys.toSet();
 
   Value put(Key1 key1, Key2 key2, Value value) {
     Map<Key2, Value> data = this.data[key1];
@@ -49,7 +49,7 @@ class DoubleKeyMap<Key1, Key2, Value> {
   Set keySetForKey(Key1 key) {
     Map<Key2, Value> data = this.data[key];
     if (data == null) return null;
-    return data.keys;
+    return data.keys.toSet();
   }
 }
 

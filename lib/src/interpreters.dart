@@ -1,5 +1,6 @@
 part of antlr4dart;
 
+
 class LexerInterpreter extends Lexer {
   final String grammarFileName;
   final Atn atn;
@@ -16,9 +17,9 @@ class LexerInterpreter extends Lexer {
                    this.ruleNames,
                    this.modeNames,
                    Atn atn,
-                   StringSource input) : super(input),
+                   StringSource input) : 
     decisionToDfa = new List<Dfa>(atn.numberOfDecisions),
-    this.atn = atn {
+    this.atn = atn, super(input) {
     if (atn.grammarType != AtnType.LEXER) {
       throw new ArgumentError("The ATN must be a lexer ATN.");
     }
@@ -60,7 +61,7 @@ class ParserInterpreter extends Parser {
                     Atn atn,
                     TokenSource input)
       : decisionToDfa = new List<Dfa>(atn.numberOfDecisions),
-        pushRecursionContextStates = new BitSet(),
+        pushRecursionContextStates = new BitSet(0),
         this.atn = atn,
         super(input) {
     for (int i = 0; i < decisionToDfa.length; i++) {
@@ -70,7 +71,7 @@ class ParserInterpreter extends Parser {
     for (AtnState state in atn.states) {
       if (state is! StarLoopEntryState) continue;
       if ((state as StarLoopEntryState).precedenceRuleDecision) {
-        pushRecursionContextStates.set(state.stateNumber, true);
+        pushRecursionContextStates[state.stateNumber]= true;
       }
     }
     // get atn simulator that knows how to do predictions
@@ -136,7 +137,7 @@ class ParserInterpreter extends Parser {
     var transition = antState.getTransition(edge - 1);
     switch (transition.serializationType) {
     case Transition.EPSILON:
-      if (pushRecursionContextStates.get(antState.stateNumber)
+      if (pushRecursionContextStates[antState.stateNumber]
           && (transition.target is! LoopEndState)) {
         var ctx = new InterpreterRuleContext(parentContextStack.last.a,
             parentContextStack.last.b, context.ruleIndex);
@@ -146,7 +147,7 @@ class ParserInterpreter extends Parser {
       }
       break;
     case Transition.ATOM:
-      match(transition.especialLabel);
+      match((transition as AtomTransition).especialLabel);
       break;
     case Transition.RANGE:
     case Transition.SET:
@@ -167,7 +168,7 @@ class ParserInterpreter extends Parser {
           context, antState.stateNumber, ruleIndex);
       if (ruleStartState.isPrecedenceRule) {
         enterRecursionRule(ctx, ruleStartState.stateNumber,
-            ruleIndex, transition.precedence);
+            ruleIndex, (transition as RuleTransition).precedence);
       } else {
         enterRule(ctx, transition.target.stateNumber, ruleIndex);
       }
@@ -184,9 +185,9 @@ class ParserInterpreter extends Parser {
       action(context, actionTransition.ruleIndex, actionTransition.actionIndex);
       break;
     case Transition.PRECEDENCE:
-      if (!precedencePredicate(context, transition.precedence)) {
+      if (!precedencePredicate(context, (transition as PrecedencePredicateTransition).precedence)) {
         throw new FailedPredicateException(this,
-            "precpred(context, ${transition.precedence})");
+            "precpred(context, ${(transition as PrecedencePredicateTransition).precedence})");
       }
       break;
     default:

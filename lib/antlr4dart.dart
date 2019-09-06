@@ -2,14 +2,13 @@ library antlr4dart;
 
 import 'dart:collection';
 import 'dart:math';
-import 'dart:async';
-import 'package:bignum/bignum.dart';
-import 'package:collection/equality.dart';
+import 'package:bit_set/bit_set.dart';
+import 'package:collection/collection.dart';
 
 part 'src/contexts.dart';
 part 'src/dfa.dart';
+part 'src/error_listener.dart';
 part 'src/error_strategy.dart';
-part 'src/events.dart';
 part 'src/exceptions.dart';
 part 'src/input_source.dart';
 part 'src/lexer.dart';
@@ -36,7 +35,7 @@ part 'src/tree/parse_tree.dart';
 part 'src/tree/parse_tree_visitor.dart';
 part 'src/tree/parse_tree_walker.dart';
 part 'src/tree/trees.dart';
-part 'src/util/bit_set.dart';
+//part 'src/util/bit_set.dart';
 part 'src/util/double_key_map.dart';
 part 'src/util/interval.dart';
 part 'src/util/interval_set.dart';
