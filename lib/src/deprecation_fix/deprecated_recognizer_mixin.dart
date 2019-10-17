@@ -32,7 +32,7 @@ part of antlr4dart.deprecation_fix;
  *       //stuff involving functions removed from the Recognizer API execute!
  *     }
  */
-abstract class DeprecatedRecognizerMixin implements Recognizer{
+abstract class DeprecatedRecognizerMixin implements Recognizer<Token, AtnSimulator>{
   List<ErrorListener> _listeners = new List<ErrorListener>();
   
   /**
