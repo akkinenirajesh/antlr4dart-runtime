@@ -2,7 +2,7 @@
 library antlr4dart.deprecation_fix;
 
 import 'package:antlr4dart/antlr4dart.dart';
-
+import 'package:bit_set/bit_set.dart';
 import 'dart:async';
 
 part 'error_listener.dart';

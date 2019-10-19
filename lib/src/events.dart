@@ -7,7 +7,7 @@ abstract class RecognizerEvent{
 
 abstract class ParserEvent extends RecognizerEvent{
   @override
-  Parser get recognizer;
+  Recognizer get recognizer;
   
   final Dfa dfa;
   final int startIndex;
