@@ -32,7 +32,7 @@ class MurmurHash {
     hash = hash ^ k;
     hash = (hash << r2) | ((hash & 0xFFFFFFFF) >> (32 - r2));
     hash = hash * m + n;
-    return hash & 0xFFFFFFFFFFFFFF;
+    return hash & 0xFFFFFFFFFFFF;
   }
 
   /// Apply the final computation steps to the intermediate value [hash]
