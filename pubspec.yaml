@@ -9,5 +9,5 @@ environment:
 
 dependencies:
   bit_set: 
-    git: https://github.com/skalkin/bit_set.git 
+    git: https://github.com/akkinenirajesh/bit_set.git
   collection: any
