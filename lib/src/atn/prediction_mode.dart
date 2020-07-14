@@ -1,7 +1,6 @@
 part of antlr4dart;
 
 class PredictionMode {
-
   /// Do only local context prediction (SLL style) and using heuristic which
   /// almost always works but is much faster than precise answer.
   static const PredictionMode SLL = const PredictionMode._internal("SLL");
@@ -112,8 +111,8 @@ class PredictionMode {
   /// [AtnConfigSet.hasSemanticContext]), this algorithm makes a copy of
   /// the configurations to strip out all of the predicates so that a standard
   /// [AtnConfigSet] will merge everything ignoring predicates.
-  static bool hasSllConflictTerminatingPrediction(PredictionMode mode,
-                                                  AtnConfigSet configs) {
+  static bool hasSllConflictTerminatingPrediction(
+      PredictionMode mode, AtnConfigSet configs) {
     // Configs in rule stop states indicate reaching the end of the decision
     // rule (local context) or end of start rule (full context). If all
     // configs meet this condition, then none of the configurations is able
@@ -129,7 +128,7 @@ class PredictionMode {
         // dup configs, tossing out semantic predicates
         AtnConfigSet dup = new AtnConfigSet();
         for (AtnConfig c in configs.elements) {
-          dup.add(new AtnConfig.from(c, semanticContext:SemanticContext.NONE));
+          dup.add(new AtnConfig.from(c, semanticContext: SemanticContext.NONE));
         }
         configs = dup;
       }
@@ -137,8 +136,8 @@ class PredictionMode {
     }
     // pure SLL or combined SLL+LL mode parsing
     Iterable<BitSet> altsets = getConflictingAltSubsets(configs);
-    return hasConflictingAltSet(altsets)
-        && !hasStateAssociatedWithOneAlt(configs);
+    return hasConflictingAltSet(altsets) &&
+        !hasStateAssociatedWithOneAlt(configs);
   }
 
   /// Checks if any configuration in [configs] is in a [RuleStopState].
@@ -368,7 +367,7 @@ class PredictionMode {
   ///
   /// Return the set of represented alternatives in [altsets].
   static BitSet getAlts(Iterable<BitSet> altsets) {
-    BitSet all = new BitSet(0);
+    BitSet all = new BitSet();
     altsets.forEach((alts) => all.or(alts));
     return all;
   }
@@ -378,14 +377,15 @@ class PredictionMode {
   ///
   ///     map[c] U= c.alt // map hash/equals uses s and x, not alt and not pred
   static Iterable<BitSet> getConflictingAltSubsets(AtnConfigSet configs) {
-    var configToAlts = new HashMap(equals:_equals, hashCode:_hashCode);
+    Map<AtnConfig, BitSet> configToAlts =
+        new HashMap<AtnConfig, BitSet>(equals: _equals, hashCode: _hashCode);
     for (AtnConfig c in configs.elements) {
       BitSet alts = configToAlts[c];
       if (alts == null) {
-        alts = new BitSet(0);
+        alts = new BitSet();
         configToAlts[c] = alts;
       }
-      alts[c.alt]= true;
+      alts[c.alt] = true;
     }
     return configToAlts.values;
   }
@@ -399,10 +399,10 @@ class PredictionMode {
     for (AtnConfig c in configs.elements) {
       BitSet alts = m[c.state];
       if (alts == null) {
-        alts = new BitSet(0);
+        alts = new BitSet();
         m[c.state] = alts;
       }
-      alts[c.alt] =  true;
+      alts[c.alt] = true;
     }
     return m;
   }
@@ -416,11 +416,12 @@ class PredictionMode {
   }
 
   static int getSingleViableAlt(Iterable<BitSet> altsets) {
-    BitSet viableAlts = new BitSet(0);
+    BitSet viableAlts = new BitSet();
     for (BitSet alts in altsets) {
       int minAlt = alts.findNext(0, true);
       viableAlts[minAlt] = true;
-      if (viableAlts.countBits(true) > 1) { // more than 1 viable alt
+      if (viableAlts.countBits(true) > 1) {
+        // more than 1 viable alt
         return Atn.INVALID_ALT_NUMBER;
       }
     }
@@ -429,7 +430,7 @@ class PredictionMode {
 
   String toString() => name;
 
-  bool operator==(Object other) {
+  bool operator ==(Object other) {
     if (other is! PredictionMode) return false;
     return name == (other as PredictionMode).name;
   }
@@ -447,6 +448,5 @@ int _hashCode(AtnConfig o) {
 bool _equals(AtnConfig a, AtnConfig b) {
   if (a == b) return true;
   if (a == null || b == null) return false;
-  return a.state.stateNumber == b.state.stateNumber
-      && a.context == b.context;
+  return a.state.stateNumber == b.state.stateNumber && a.context == b.context;
 }

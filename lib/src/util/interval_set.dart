@@ -15,7 +15,6 @@ part of antlr4dart;
 /// The ranges are ordered and disjoint so that `2..6` appears
 /// before `101..103`.
 class IntervalSet {
-
   static final COMPLETE_CHAR_SET = IntervalSet.of(0, Lexer.MAX_CHAR_VALUE);
   static final EMPTY_SET = new IntervalSet();
 
@@ -24,15 +23,16 @@ class IntervalSet {
 
   bool isReadonly = false;
 
-  IntervalSet([dynamic els]) {
+  IntervalSet([List<Interval> els]) {
     if (els == null) {
       _intervals = new List<Interval>();
-    } else if (els is List<int>) {
-      _intervals = new List<Interval>();
-      els.forEach((e) => addSingle(e));
     } else {
       _intervals = els;
     }
+  }
+  IntervalSet.fromIntList(List<int> els) {
+    _intervals = new List<Interval>();
+    els.forEach((e) => addSingle(e));
   }
 
   IntervalSet.from(IntervalSet set) {
@@ -43,16 +43,14 @@ class IntervalSet {
   /// Create a set with a single element [a].
   ///
   /// [a] could be an [int] or a single character [String].
-  static IntervalSet ofSingle(dynamic a) => new IntervalSet([a]);
+  static IntervalSet ofSingle(int a) => new IntervalSet.fromIntList([a]);
 
   /// Create a set with all ints within range `[a..b]` (inclusive).
   ///
   /// [a] and [b] could be [int]s or sigle character [String]s.
-  static IntervalSet of(dynamic a, dynamic b) {
-    if (a is String) a = a.codeUnitAt(0);
-    if (b is String) b = b.codeUnitAt(0);
+  static IntervalSet of(int a, int b) {
     IntervalSet intervalSet = new IntervalSet();
-    intervalSet.add(a,b);
+    intervalSet.add(a, b);
     return intervalSet;
   }
 
@@ -84,7 +82,7 @@ class IntervalSet {
   int get singleElement {
     if (_intervals.length == 1) {
       Interval i = _intervals.first;
-      if (i._a == i._b ) return i._a;
+      if (i._a == i._b) return i._a;
     }
     return Token.INVALID_TYPE;
   }
@@ -95,7 +93,7 @@ class IntervalSet {
   int get minElement {
     if (isNil) return Token.INVALID_TYPE;
     int n = _intervals.length;
-    for (Interval i in  _intervals) {
+    for (Interval i in _intervals) {
       int a = i._a;
       int b = i._b;
       for (int v = a; v <= b; v++) {
@@ -118,7 +116,7 @@ class IntervalSet {
   }
 
   /// Are two [IntervalSet]s equal?
-  bool operator==(Object other) {
+  bool operator ==(Object other) {
     if (other is IntervalSet) {
       if (_intervals.length == other._intervals.length) {
         for (int i = 0; i < _intervals.length; i++)
@@ -138,7 +136,7 @@ class IntervalSet {
   /// as a range `a..a`.
   ///
   /// [a] could be an [int] or a single character [String].
-  void addSingle(dynamic a) {
+  void addSingle(int a) {
     if (isReadonly) throw new StateError("can't alter readonly IntervalSet");
     add(a, a);
   }
@@ -154,7 +152,7 @@ class IntervalSet {
   /// `{1..8, 10..20}`.
   ///
   /// [a] and [b] could be [int]s or single character [String]s.
-  void add(dynamic a, dynamic b) {
+  void add(int a, int b) {
     _add(Interval.of(a, b));
   }
 
@@ -192,7 +190,8 @@ class IntervalSet {
       IntervalSet a = s.and(vocabularyCopy);
       compl.addAll(a);
     }
-    for (int i = 1; i < n; i++) { // from 2nd interval .. nth
+    for (int i = 1; i < n; i++) {
+      // from 2nd interval .. nth
       Interval previous = _intervals[i - 1];
       Interval current = _intervals[i];
       IntervalSet s = IntervalSet.of(previous._b + 1, current._a - 1);
@@ -226,9 +225,7 @@ class IntervalSet {
   }
 
   IntervalSet or(IntervalSet a) {
-    return new IntervalSet()
-        ..addAll(this)
-        ..addAll(a);
+    return new IntervalSet()..addAll(this)..addAll(a);
   }
 
   /// Return a new set with the intersection of `this` set with [other].
@@ -289,8 +286,7 @@ class IntervalSet {
   /// Is [a] in any range of this set?
   ///
   /// [a] could be a [int] or a single character [String].
-  bool contains(dynamic a) {
-    if (a is String) a = a.codeUnitAt(0);
+  bool contains(int a) {
     for (Interval i in _intervals) {
       // list is sorted and el is before this interval; not here
       if (a < i._a) break;
@@ -306,8 +302,10 @@ class IntervalSet {
     Iterator<Interval> iter = _intervals.iterator;
     bool first = true;
     while (iter.moveNext()) {
-      if (!first) sb.write(", ");
-      else first = false;
+      if (!first)
+        sb.write(", ");
+      else
+        first = false;
       Interval i = iter.current;
       int a = i._a;
       int b = i._b;
@@ -349,7 +347,7 @@ class IntervalSet {
       if (a == b) {
         sb.write(_elementName(tokenNames, a));
       } else {
-        for (int i=a; i<=b; i++) {
+        for (int i = a; i <= b; i++) {
           if (i > a) sb.write(", ");
           sb.write(_elementName(tokenNames, i));
         }
@@ -382,9 +380,8 @@ class IntervalSet {
     return set;
   }
 
-  void remove(dynamic a) {
+  void remove(int a) {
     if (isReadonly) throw new StateError("can't alter readonly IntervalSet");
-    if (a is String) a = a.codeUnitAt(0);
     int n = _intervals.length;
     for (int i = 0; i < n; i++) {
       Interval interval = _intervals[i];
@@ -410,7 +407,7 @@ class IntervalSet {
         // found in this interval
         int oldb = interval._b;
         interval._b = a - 1; // [a..x-1]
-        add(a + 1, oldb);    // add [x+1..b]
+        add(a + 1, oldb); // add [x+1..b]
       }
     }
   }

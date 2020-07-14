@@ -94,7 +94,7 @@ class AtnConfigSet {
   /// Gets the complete set of represented alternatives for the
   /// configuration set.
   BitSet get alts {
-    BitSet alts = new BitSet(0);
+    BitSet alts = new BitSet();
     for (AtnConfig config in configs) {
       alts[config.alt]= true;
     }
